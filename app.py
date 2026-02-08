@@ -52,11 +52,6 @@ setor = st.sidebar.selectbox("Módulo", list(config.keys()))
 st.sidebar.divider()
 st.sidebar.subheader("Filtros de Gestão")
 data_range = st.sidebar.date_input("Período")
-st.sidebar.image("logo.png") if os.path.exists("logo.png") else st.sidebar.title("Gênio Master")
-setor = st.sidebar.selectbox("Módulo", list(config.keys()))
-st.sidebar.divider()
-st.sidebar.subheader("Filtros de Gestão")
-data_range = st.sidebar.date_input("Período")
 
 # --- HEADER DINÂMICO ---
 img_path = config[setor]["img"]
@@ -67,6 +62,7 @@ else:
 
 # --- CARREGAMENTO DE DADOS ---
 try:
+    # URL atualizada com o ID correto da sua planilha
     url = f"https://docs.google.com/spreadsheets/d/1jFpKsA1jxOchNS4s6yE5M9YvQz9yM_NgWONjly4iI3o/export?format=csv&gid={config[setor]['gid']}"
     df = pd.read_csv(url)
 
@@ -75,12 +71,17 @@ try:
     kpi1, kpi2, kpi3, kpi4 = st.columns(4)
     
     with kpi1:
-        st.metric("Total de Itens", len(df))
+        st.metric("Total de Registros", len(df))
     with kpi2:
-        # Exemplo de lógica de valor (ajustar conforme sua coluna)
+        # Tenta somar valores se houver coluna numérica, senão mostra o total de aptos únicos
         col_valor = df.select_dtypes(include=['number']).columns
-        val = df[col_valor[0]].sum() if len(col_valor) > 0 else 0
-        st.metric("Volume Total", f"R$ {val:,.2f}")
+        if len(col_valor) > 0:
+            val = df[col_valor[0]].sum()
+            st.metric("Volume Total", f"R$ {val:,.2f}")
+        else:
+            aptos = df['APT'].nunique() if 'APT' in df.columns else 0
+            st.metric("Unidades Envolvidas", aptos)
+            
     with kpi3:
         st.metric("Status Operacional", "100%", delta="Normal")
     with kpi4:
@@ -89,21 +90,23 @@ try:
     st.divider()
 
     # --- CAMADA 2: DASHBOARDS GRÁFICOS ---
-    col_left, col_right = st.columns([1, 1])
+    col_left, col_right = st.columns(2)
     
     with col_left:
-        st.markdown("### 📊 Distribuição por Categoria")
-        cols_txt = df.select_dtypes(include=['object']).columns
-        if len(cols_txt) > 0:
-            fig = px.pie(df, names=cols_txt[0], hole=.5, color_discrete_sequence=[config[setor]["color"]])
-            fig.update_layout(showlegend=False, margin=dict(t=0, b=0, l=0, r=0))
-            st.plotly_chart(fig, use_container_width=True)
+        st.markdown("### 📊 Distribuição por Assunto")
+        # Identifica a coluna de categorias (ex: Assunto)
+        col_cat = 'Assunto' if 'Assunto' in df.columns else df.select_dtypes(include=['object']).columns[0]
+        fig = px.pie(df, names=col_cat, hole=.4, color_discrete_sequence=px.colors.qualitative.Pastel)
+        fig.update_layout(margin=dict(t=30, b=0, l=0, r=0))
+        st.plotly_chart(fig, use_container_width=True)
 
     with col_right:
-        st.markdown("### 📈 Tendência de Volume")
-        if len(col_valor) > 0 and len(cols_txt) > 0:
-            fig_bar = px.bar(df, x=cols_txt[0], y=col_valor[0], color_discrete_sequence=[config[setor]["color"]])
-            fig_bar.update_layout(margin=dict(t=0, b=0, l=0, r=0))
+        st.markdown("### 📈 Ocorrências por Torre")
+        col_torre = 'Torre' if 'Torre' in df.columns else df.select_dtypes(include=['object']).columns[1]
+        if col_torre in df.columns:
+            df_counts = df[col_torre].value_counts().reset_index()
+            fig_bar = px.bar(df_counts, x=col_torre, y='count', color_discrete_sequence=[config[setor]["color"]])
+            fig_bar.update_layout(margin=dict(t=30, b=0, l=0, r=0))
             st.plotly_chart(fig_bar, use_container_width=True)
 
     # --- CAMADA 3: TABELA TÉCNICA ---
@@ -111,4 +114,4 @@ try:
         st.dataframe(df, use_container_width=True)
 
 except Exception as e:
-    st.error(f"Erro na integração do módulo {setor}. Verifique as permissões da planilha.")
+    st.error(f"Aguardando conexão com o módulo {setor}. Verifique se a planilha está publicada na web.")
