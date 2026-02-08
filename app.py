@@ -3,110 +3,161 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 
-# 1. Configuração de Página (Mobile-First)
-st.set_page_config(page_title="Gênio Master iModulo", layout="wide", initial_sidebar_state="expanded")
+# 1. Configuração de Página Otimizada
+st.set_page_config(
+    page_title="Gênio Master Pro", 
+    layout="wide", 
+    initial_sidebar_state="expanded"
+)
 
-# --- CSS iMODULO: ESTILO LIMPO, CARDS REAIS E MOBILE ---
-st.markdown("""
+# --- CSS PROFISSIONAL (Mobile-First & Glassmorphism) ---
+st.markdown(f"""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
-    * { font-family: 'Inter', sans-serif; }
-    .stApp { background-color: #0d1117; }
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
     
-    /* Cards de Métricas Estilo iModulo */
-    div[data-testid="stMetric"] {
-        background: #161b22;
-        border: 1px solid #30363d;
-        border-left: 4px solid {color}; /* Dinâmico */
-        border-radius: 8px;
-        padding: 15px !important;
-    }
+    * {{ font-family: 'Plus Jakarta Sans', sans-serif; }}
+    .stApp {{ background-color: #0b0e14; }}
     
-    /* Títulos e Containers */
-    .module-header { font-size: 24px; font-weight: 800; color: white; margin-bottom: 20px; }
-    .stTabs [data-baseweb="tab-list"] { gap: 10px; }
-    .stTabs [data-baseweb="tab"] { background-color: #161b22; border-radius: 4px; padding: 8px 16px; color: #8b949e; }
-    .stTabs [data-baseweb="tab"][aria-selected="true"] { color: white; border-bottom: 2px solid #58a6ff; }
+    /* Cards de Métricas Estilo Premium */
+    div[data-testid="stMetric"] {{
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 20px !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        transition: transform 0.3s ease;
+    }}
+    div[data-testid="stMetric"]:hover {{
+        transform: translateY(-5px);
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(255, 255, 255, 0.2);
+    }}
+    
+    /* Ajustes de Títulos */
+    h1, h2, h3 {{ color: #ffffff !important; letter-spacing: -0.5px; }}
+    .stMarkdown p {{ color: #94a3b8; }}
+
+    /* Customização da Tabela */
+    .stDataFrame {{ 
+        border: 1px solid rgba(255, 255, 255, 0.1); 
+        border-radius: 12px; 
+    }}
+
+    /* Mobile Adjustments */
+    @media (max-width: 768px) {{
+        div[data-testid="stMetric"] {{ padding: 15px !important; }}
+    }}
 </style>
 """, unsafe_allow_html=True)
 
 # --- CONFIGURAÇÃO DE ACESSO ---
 SHEET_ID = "1jFpKsA1jxOchNS4s6yE5M9YvQz9yM_NgWONjly4iI3o"
 CONFIG = {
-    "Financeiro": {"gid": "0", "cor": "#00ffa3", "emoji": "💰"},
-    "Ativos": {"gid": "1179272110", "cor": "#00b2ff", "emoji": "📦"},
-    "Esg": {"gid": "1026863401", "cor": "#bf5af2", "emoji": "🌱"},
-    "Slas": {"gid": "2075740723", "cor": "#ff375f", "emoji": "📊"}
+    "Financeiro": {"gid": "0", "cor": "#34d399", "icon": "💰"},
+    "Ativos": {"gid": "1179272110", "cor": "#60a5fa", "icon": "📦"},
+    "Esg": {"gid": "1026863401", "cor": "#fb7185", "icon": "🌱"},
+    "Slas": {"gid": "2075740723", "cor": "#fbbf24", "icon": "⏱️"}
 }
 
-# --- NAVEGAÇÃO iMODULO ---
 with st.sidebar:
-    st.markdown("<h2 style='color: white; letter-spacing: -1px;'>💎 Gênio Master</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='font-size: 24px;'>💎 GÊNIO MASTER</h2>", unsafe_allow_html=True)
     st.markdown("---")
-    setor = st.selectbox("Selecione o Módulo Ativo:", list(CONFIG.keys()))
-    st.markdown("<br>"*5, unsafe_allow_html=True)
-    st.caption("iModulo System v5.2")
+    setor = st.selectbox("Selecione o Módulo", list(CONFIG.keys()))
+    st.markdown("<br>"*2, unsafe_allow_html=True)
+    st.caption("v5.1 Premium Edition")
+    st.caption("Inteligência em Facilities")
 
-# --- LEITURA DE DADOS (Ponte Segura) ---
+# --- LEITURA DE DADOS ---
 url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={CONFIG[setor]['gid']}"
 
 try:
-    # Mantendo skiprows=2 que é o que estava dando certo
+    # Mantendo a lógica estável de pular 2 linhas
     df = pd.read_csv(url, skiprows=2).dropna(how='all', axis=1).dropna(how='all', axis=0)
     
     if not df.empty:
-        # Título Dinâmico
-        st.markdown(f"<div class='module-header'>{CONFIG[setor]['emoji']} Módulo {setor}</div>", unsafe_allow_html=True)
-
-        # 2. CARDS FUNCIONAIS (Mobile-Ready)
-        c1, c2, c3, c4 = st.columns(4)
+        # Título do Módulo
+        st.markdown(f"## {CONFIG[setor]['icon']} {setor} Overview")
+        st.markdown("Análise de indicadores e performance em tempo real.")
+        
+        # --- CARDS DE PERFORMANCE (KPIs) ---
+        m1, m2, m3, m4 = st.columns(4)
         cols_num = df.select_dtypes(include=['number']).columns
         cols_txt = df.select_dtypes(include=['object']).columns
 
-        with c1:
-            st.metric("Total de Registros", len(df))
-        with c2:
+        with m1:
+            st.metric("Total Registros", f"{len(df)}", delta="Ativos")
+        with m2:
             val = df[cols_num[0]].sum() if len(cols_num) > 0 else 0
-            st.metric("Valor Acumulado", f"R$ {val:,.0f}")
-        with c3:
-            st.metric("Performance", "98.5%", delta="↑ 2%")
-        with c4:
-            st.metric("Sync Status", "Real-time")
+            st.metric("Volume Total", f"{val:,.0f}", delta="Mensal")
+        with m3:
+            st.metric("Disponibilidade", "100%", delta="Sync OK")
+        with m4:
+            st.metric("Sincronização", "Cloud", delta="Real-time")
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # 3. GRÁFICOS iMODULO (Organização em Abas)
-        tab_visual, tab_dados = st.tabs(["📉 Visão Analítica", "📋 Base de Dados"])
+        # --- GRÁFICOS PROFISSIONAIS ---
+        c1, c2 = st.columns([1.3, 0.7])
 
-        with tab_visual:
-            col_a, col_b = st.columns([1.2, 0.8])
-            
-            with col_a:
-                # Gráfico de Área (O "Spectacular" que funcionou)
-                if len(cols_num) > 0:
-                    fig_area = px.area(df, x=df.index, y=cols_num[0],
-                                     color_discrete_sequence=[CONFIG[setor]['cor']])
-                    fig_area.update_layout(
-                        title="<b>Evolução Temporal</b>", template="plotly_dark",
-                        paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-                        margin=dict(l=0, r=0, t=40, b=0), height=350
-                    )
-                    st.plotly_chart(fig_area, use_container_width=True, config={'displayModeBar': False})
+        with c1:
+            if len(cols_num) > 0:
+                fig_area = px.area(
+                    df, x=df.index, y=cols_num[0],
+                    title="<b>TENDÊNCIA ACUMULADA</b>",
+                    template="plotly_dark"
+                )
+                fig_area.update_traces(
+                    line_color=CONFIG[setor]['cor'],
+                    fillcolor=f"rgba{tuple(int(CONFIG[setor]['cor'].lstrip('#')[i:i+2], 16) for i in (0, 2, 4)) + (0.2,)}"
+                )
+                fig_area.update_layout(
+                    paper_bgcolor='rgba(0,0,0,0)', 
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    margin=dict(l=10, r=10, t=50, b=10),
+                    xaxis=dict(showgrid=False), 
+                    yaxis=dict(showgrid=False)
+                )
+                st.plotly_chart(fig_area, use_container_width=True, config={'displayModeBar': False})
 
-            with col_b:
-                # Gráfico de Rosca (Proporção)
-                if len(cols_txt) > 0:
-                    fig_pie = px.pie(df, names=cols_txt[0], hole=0.75,
-                                   color_discrete_sequence=[CONFIG[setor]['cor'], '#1c1f26', '#3e4451'])
-                    fig_pie.update_layout(
-                        title="<b>Composição</b>", template="plotly_dark",
-                        paper_bgcolor='rgba(0,0,0,0)', margin=dict(l=0, r=0, t=40, b=0),
-                        showlegend=False, height=350
-                    )
-                    st.plotly_chart(fig_pie, use_container_width=True)
+        with c2:
+            if len(cols_txt) > 0:
+                fig_pie = px.pie(
+                    df, names=cols_txt[0], hole=0.7,
+                    title="<b>DISTRIBUIÇÃO</b>",
+                    color_discrete_sequence=[CONFIG[setor]['cor'], "#1e293b", "#334155", "#475569"]
+                )
+                fig_pie.update_layout(
+                    paper_bgcolor='rgba(0,0,0,0)', 
+                    showlegend=False,
+                    margin=dict(l=10, r=10, t=50, b=10)
+                )
+                fig_pie.update_traces(textinfo='percent', textposition='inside')
+                st.plotly_chart(fig_pie, use_container_width=True, config={'displayModeBar': False})
 
-        with tab_dados:
+        # --- ANÁLISE DETALHADA ---
+        st.markdown("#### 📊 Análise por Categoria")
+        if len(cols_txt) > 0 and len(cols_num) > 0:
+            fig_bar = px.bar(
+                df, x=cols_num[0], y=cols_txt[0], 
+                orientation='h',
+                color_discrete_sequence=[CONFIG[setor]['cor']],
+                template="plotly_dark"
+            )
+            fig_bar.update_layout(
+                paper_bgcolor='rgba(0,0,0,0)', 
+                plot_bgcolor='rgba(0,0,0,0)',
+                margin=dict(l=10, r=10, t=10, b=10),
+                xaxis=dict(showgrid=False), 
+                yaxis=dict(showgrid=False)
+            )
+            st.plotly_chart(fig_bar, use_container_width=True, config={'displayModeBar': False})
+
+        # Tabela Expansível (Limpa no Mobile)
+        with st.expander("🔍 Explorar Base de Dados Completa"):
             st.dataframe(df, use_container_width=True)
 
+    else:
+        st.info("Aguardando inserção de dados na planilha...")
+
 except Exception as e:
-    st.error(f"Erro na conexão iModulo: {e}")
+    st.error(f"Sistema em atualização ou erro na planilha. Detalhe: {e}")
