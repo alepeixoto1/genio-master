@@ -43,6 +43,15 @@ config = {
 }
 
 # --- BARRA LATERAL (FILTROS) ---
+if os.path.exists("logo.png"):
+    st.sidebar.image("logo.png")
+else:
+    st.sidebar.markdown("## 💡 Gênio Master")
+
+setor = st.sidebar.selectbox("Módulo", list(config.keys()))
+st.sidebar.divider()
+st.sidebar.subheader("Filtros de Gestão")
+data_range = st.sidebar.date_input("Período")
 st.sidebar.image("logo.png") if os.path.exists("logo.png") else st.sidebar.title("Gênio Master")
 setor = st.sidebar.selectbox("Módulo", list(config.keys()))
 st.sidebar.divider()
