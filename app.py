@@ -58,7 +58,7 @@ else:
 
 # --- CARREGAMENTO DE DADOS ---
 try:
-    url = f"https://docs.google.com/spreadsheets/d/1jFpKsA1jxOchNS4s6yE5M9YvQz9yM_NgWONjly4il3o/export?format=csv&gid={config[setor]['gid']}"
+    url = f"https://docs.google.com/spreadsheets/d/1jFpKsA1jxOchNS4s6yE5M9YvQz9yM_NgWONjly4iI3o/export?format=csv&gid={config[setor]['gid']}"
     df = pd.read_csv(url)
 
     # --- CAMADA 1: KPIS DE ALTO NÍVEL ---
