@@ -1,9 +1,10 @@
 import streamlit as st
 import pandas as pd
 
+# Configuração da página
 st.set_page_config(page_title="Gênio Master", layout="wide")
 
-# Login
+# Sistema de Login
 if "logado" not in st.session_state:
     st.title("🔒 Gênio Master")
     senha = st.text_input("Senha Master:", type="password")
@@ -15,19 +16,41 @@ if "logado" not in st.session_state:
             st.error("Senha incorreta")
     st.stop()
 
-st.title("📊 Painel de Controle - Gênio Master")
+st.title("📊 Painel de Facilities - Gênio Master")
 
-# O LINK QUE VOCÊ ME MANDOU, AJUSTADO PARA O SISTEMA LER:
-url_publica = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQlUCy8YHlnRGlxmkkp-c9wbg9-ZqEVcubbjvUX715_SwQv1-YnNGpbi0FJ8QD2pyf2VSUGH14Nl-VP/pub?output=csv"
+# ID Único da sua planilha
+sheet_id = "1jFpKsA1jxOchNS4s6yE5M9YvQz9yM_NgWONjly4iI3o"
+
+# Menu lateral para navegar entre as planilhas
+st.sidebar.header("Navegação")
+aba_selecionada = st.sidebar.radio(
+    "Selecione o Painel:", 
+    ["Financeiro", "Ativos", "ESG", "SLAs"]
+)
+
+# Mapeamento EXATO dos GIDs que você enviou
+gids = {
+    "Financeiro": "0",
+    "Ativos": "1179272110",
+    "ESG": "1026863401",
+    "SLAs": "2075740723"
+}
 
 try:
-    # Carregando os dados
-    df = pd.read_csv(url_publica)
+    # Monta o link de exportação para a aba escolhida
+    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gids[aba_selecionada]}"
     
-    st.subheader("Dados em Tempo Real")
-    st.dataframe(df, use_container_width=True)
-    st.success("Conectado com sucesso via Web!")
+    # Lê os dados
+    df = pd.read_csv(url)
+    
+    st.subheader(f"Exibindo: {aba_selecionada}")
+    
+    if df.empty:
+        st.info(f"A aba {aba_selecionada} está conectada, mas não possui dados preenchidos.")
+    else:
+        st.dataframe(df, use_container_width=True)
+        st.success(f"Dados de {aba_selecionada} atualizados!")
 
 except Exception as e:
-    st.error(f"Erro ao ler dados: {e}")
-    st.info("Certifique-se de que a planilha tem dados preenchidos na linha 2.")
+    st.error("Erro ao carregar os dados.")
+    st.info("Certifique-se de que a planilha está compartilhada como 'Qualquer pessoa com o link'.")
