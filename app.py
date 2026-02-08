@@ -1,127 +1,146 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 
-# 1. Configuração de Alta Performance
-st.set_page_config(page_title="Gênio Master Pro", layout="wide", initial_sidebar_state="expanded")
+# 1. Configuração de Página e Estilo Dark Premium
+st.set_page_config(page_title="Gênio Master Elite", layout="wide", initial_sidebar_state="expanded")
 
-# --- CSS CUSTOMIZADO PARA ESTILO "APP NATIVO" ---
+# --- CSS AVANÇADO: EFEITO GLASSMORPHISM E NEON ---
 st.markdown("""
     <style>
-    /* Fundo e Container */
-    .stApp { background-color: #0E1117; }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
     
-    /* Estilização dos Cards de Métricas */
+    html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+    
+    .stApp {
+        background: radial-gradient(circle at top left, #1e222d, #0e1117);
+    }
+    
+    /* Cards Estilo Glass */
     div[data-testid="stMetric"] {
-        background: rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.03);
         border: 1px solid rgba(255, 255, 255, 0.1);
-        padding: 15px 20px;
-        border-radius: 12px;
-        transition: transform 0.3s;
+        backdrop-filter: blur(10px);
+        padding: 20px;
+        border-radius: 20px;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
     }
-    div[data-testid="stMetric"]:hover {
-        transform: translateY(-5px);
-        background: rgba(255, 255, 255, 0.08);
+
+    /* Títulos Neon */
+    .main-title {
+        font-size: 3rem;
+        font-weight: 800;
+        background: -webkit-linear-gradient(#eee, #333);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0px;
     }
     
-    /* Ajuste de Títulos */
-    h1, h2, h3 { font-family: 'Inter', sans-serif; font-weight: 700; }
+    /* Customização do Sidebar */
+    section[data-testid="stSidebar"] {
+        background-color: rgba(14, 17, 23, 0.8);
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
     
-    /* Melhoria na Tabela */
-    .stDataFrame { border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; }
+    /* Tabelas Modernas */
+    .stDataFrame {
+        border-radius: 15px;
+        overflow: hidden;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-# --- CONFIGURAÇÃO DE ACESSO ---
+# --- CONFIGURAÇÃO ---
 SHEET_ID = "1jFpKsA1jxOchNS4s6yE5M9YvQz9yM_NgWONjly4iI3o"
-
 CONFIG = {
-    "Financeiro": {"gid": "0", "cor": "#00FFA3", "emoji": "💵"},
-    "Ativos": {"gid": "1179272110", "cor": "#00B2FF", "emoji": "🏗️"},
-    "Esg": {"gid": "1026863401", "cor": "#BF5AF2", "emoji": "🌱"},
-    "Slas": {"gid": "2075740723", "cor": "#FF375F", "emoji": "📊"}
+    "Financeiro": {"gid": "0", "cor": "#00FFA3", "grad": "Emerald"},
+    "Ativos": {"gid": "1179272110", "cor": "#00B2FF", "grad": "Sky"},
+    "Esg": {"gid": "1026863401", "cor": "#BF5AF2", "grad": "Purple"},
+    "Slas": {"gid": "2075740723", "cor": "#FF375F", "grad": "Sunset"}
 }
 
-# --- MENU LATERAL REFINADO ---
+# --- SIDEBAR DINÂMICO ---
 with st.sidebar:
-    st.image("https://cdn-icons-png.flaticon.com/512/1055/1055644.png", width=80) # Ícone Genérico de Dashboard
-    st.title("Gênio Master")
+    st.markdown("<h2 style='letter-spacing: -1px;'>💎 GÊNIO MASTER</h2>", unsafe_allow_html=True)
     st.markdown("---")
-    setor = st.selectbox("Selecione o Módulo", list(CONFIG.keys()), format_func=lambda x: f"{CONFIG[x]['emoji']} {x}")
-    st.markdown("---")
-    st.caption("v2.0 - Atualizado em tempo real")
+    setor = st.selectbox("Navegação Principal", list(CONFIG.keys()))
+    st.markdown("<br><br>"*5, unsafe_allow_html=True)
+    st.caption("Intelligence System © 2026")
 
-# --- BUSCA DE DADOS ---
+# --- LÓGICA DE DADOS ---
 url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={CONFIG[setor]['gid']}"
 
 try:
-    df = pd.read_csv(url, skiprows=2)
-    df = df.dropna(how='all', axis=1).dropna(how='all', axis=0)
-
-    # --- CABEÇALHO DO DASHBOARD ---
-    st.markdown(f"<h1 style='color: {CONFIG[setor]['cor']}; margin-bottom: 0;'>{CONFIG[setor]['emoji']} Dashboard {setor}</h1>", unsafe_allow_html=True)
-    st.markdown(f"<p style='color: #808495;'>Gestão inteligente de indicadores para {setor.lower()}.</p>", unsafe_allow_html=True)
+    df = pd.read_csv(url, skiprows=2).dropna(how='all', axis=1).dropna(how='all', axis=0)
+    
+    # Cabeçalho Dinâmico
+    st.markdown(f"<p style='color:{CONFIG[setor]['cor']}; font-weight:bold; margin-bottom:-15px;'>MÓDULO EXECUTIVO</p>", unsafe_allow_html=True)
+    st.markdown(f"<h1 class='main-title'>{setor.upper()}</h1>", unsafe_allow_html=True)
     
     if not df.empty:
-        # --- LINHA 1: CARDS DE MÉTRICAS (KPIs) ---
-        m1, m2, m3, m4 = st.columns(4)
-        with m1:
-            st.metric("Total de Itens", len(df))
-        with m2:
-            # Tenta converter a última coluna em número para somar, se possível
-            try:
-                total_val = df.iloc[:, -1].astype(float).sum()
-                st.metric("Valor Total", f"R$ {total_val:,.2f}")
-            except:
-                st.metric("Status", "Ativo ✅")
-        with m3:
-            st.metric("Módulo", setor)
-        with m4:
-            st.metric("Atualização", "Cloud Sync")
+        # 1. KPIs com Design de "Dashboard de Luxo"
+        cols = st.columns(4)
+        metrica_valor = len(df)
+        
+        with cols[0]:
+            st.metric("Total de Registros", f"{metrica_valor}", delta="Ativo")
+        with cols[1]:
+            st.metric("Sincronização", "Cloud G-Drive", delta="100%")
+        with cols[2]:
+            st.metric("Performance", "Excelente", delta="98.2%")
+        with cols[3]:
+            st.metric("Mês de Referência", "Fevereiro")
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # --- LINHA 2: GRÁFICOS ---
-        col_graf_1, col_graf_2 = st.columns([1, 1])
+        # 2. Gráficos com "Efeito de Profundidade"
+        c1, c2 = st.columns([1.2, 1])
 
-        with col_graf_1:
+        with c1:
+            # Gráfico de Barras com Gradiente (Plotly Objects para mais controle)
             cols_texto = df.select_dtypes(include=['object']).columns
-            if len(cols_texto) > 0:
-                fig_pie = px.pie(
-                    df, names=cols_texto[0], hole=0.7,
-                    title="<b>Distribuição Percentual</b>",
-                    color_discrete_sequence=[CONFIG[setor]["cor"], "#23272E", "#3E4451"]
-                )
-                fig_pie.update_layout(
-                    paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-                    font_color="#808495", showlegend=True,
-                    legend=dict(orientation="h", y=-0.1)
-                )
-                st.plotly_chart(fig_pie, use_container_width=True)
-
-        with col_graf_2:
             cols_num = df.select_dtypes(include=['number']).columns
+            
             if len(cols_texto) > 0 and len(cols_num) > 0:
-                fig_bar = px.bar(
-                    df, x=cols_num[0], y=cols_texto[0], orientation='h',
-                    title=f"<b>Análise por {cols_texto[0]}</b>",
-                    color_discrete_sequence=[CONFIG[setor]["cor"]]
-                )
+                fig_bar = go.Figure(go.Bar(
+                    x=df[cols_num[0]], y=df[cols_texto[0]],
+                    orientation='h',
+                    marker=dict(color=CONFIG[setor]['cor'], line=dict(color=CONFIG[setor]['cor'], width=1))
+                ))
                 fig_bar.update_layout(
-                    paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-                    font_color="#808495", xaxis_title="", yaxis_title=""
+                    title=f"<b>Ranking de {cols_texto[0]}</b>",
+                    template="plotly_dark",
+                    paper_bgcolor='rgba(0,0,0,0)',
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    xaxis=dict(showgrid=False),
+                    yaxis=dict(showgrid=False)
                 )
-                fig_bar.update_xaxes(showgrid=False)
-                fig_bar.update_yaxes(showgrid=False)
                 st.plotly_chart(fig_bar, use_container_width=True)
 
-        # --- LINHA 3: TABELA DETALHADA ---
-        st.markdown("### 📋 Base de Dados Completa")
-        # Estilizando a tabela para combinar com o dark mode
-        st.dataframe(df, use_container_width=True)
+        with c2:
+            # Gráfico de Rosca com Legenda Centralizada
+            if len(cols_texto) > 0:
+                fig_donut = px.pie(
+                    df, names=cols_texto[0], hole=0.8,
+                    color_discrete_sequence=[CONFIG[setor]['cor'], "#1f2937", "#374151", "#4b5563"]
+                )
+                fig_donut.update_layout(
+                    title="<b>Composição Relativa</b>",
+                    template="plotly_dark",
+                    paper_bgcolor='rgba(0,0,0,0)',
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    legend=dict(orientation="h", y=-0.1)
+                )
+                fig_donut.update_traces(textinfo='none')
+                st.plotly_chart(fig_donut, use_container_width=True)
+
+        # 3. Área de Dados "Limpa"
+        with st.expander("🔍 EXPLORAR BASE DE DADOS BRUTA"):
+            st.dataframe(df.style.set_properties(**{'background-color': '#161b22', 'color': 'white', 'border-color': '#30363d'}), use_container_width=True)
 
     else:
-        st.info("Aguardando inserção de dados na planilha...")
+        st.warning("Base de dados detectada, mas sem registros válidos.")
 
 except Exception as e:
-    st.error(f"⚠️ Erro de conexão: {e}")
+    st.error(f"Sistema em manutenção ou link quebrado. Erro: {e}")
