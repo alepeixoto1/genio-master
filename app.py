@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 
-# Configuração da página
 st.set_page_config(page_title="Gênio Master", layout="wide")
 
 # Login
@@ -16,35 +15,19 @@ if "logado" not in st.session_state:
             st.error("Senha incorreta")
     st.stop()
 
-st.title("📊 Painel de Facilities")
+st.title("📊 Painel de Controle - Gênio Master")
 
-# O SEU NOVO LINK DE PUBLICAÇÃO (Extraído do que você enviou)
-base_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQlUCy8YHlnRGlxmkkp-c9wbg9-ZqEVcubbjvUX715_SwQv1-YnNGpbi0FJ8QD2pyf2VSUGH14Nl-VP/pub?output=csv"
-
-# Menu lateral para as suas abas
-st.sidebar.header("Navegação")
-aba_selecionada = st.sidebar.selectbox("Escolha o Painel", ["Financeiro", "Ativos", "Esg", "Slas"])
-
-# Mapeamento dos GIDs para o link de publicação
-gids = {
-    "Financeiro": "0",
-    "Ativos": "1179272110",
-    "Esg": "1626002778",
-    "Slas": "1805560751"
-}
+# O LINK QUE VOCÊ ME MANDOU, AJUSTADO PARA O SISTEMA LER:
+url_publica = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQlUCy8YHlnRGlxmkkp-c9wbg9-ZqEVcubbjvUX715_SwQv1-YnNGpbi0FJ8QD2pyf2VSUGH14Nl-VP/pub?output=csv"
 
 try:
-    # Monta o link final para download do CSV de cada aba
-    final_url = f"{base_url}&gid={gids[aba_selecionada]}"
-    df = pd.read_csv(final_url)
+    # Carregando os dados
+    df = pd.read_csv(url_publica)
     
-    if df.empty:
-        st.warning(f"A aba '{aba_selecionada}' está conectada, mas não tem dados preenchidos.")
-    else:
-        st.subheader(f"Dados: {aba_selecionada}")
-        st.dataframe(df, use_container_width=True)
-        st.success("Conectado com sucesso!")
+    st.subheader("Dados em Tempo Real")
+    st.dataframe(df, use_container_width=True)
+    st.success("Conectado com sucesso via Web!")
 
 except Exception as e:
-    st.error("Erro ao carregar os dados. Verifique se a planilha tem informações preenchidas.")
-    st.info(f"Erro técnico: {e}")
+    st.error(f"Erro ao ler dados: {e}")
+    st.info("Certifique-se de que a planilha tem dados preenchidos na linha 2.")
