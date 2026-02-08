@@ -3,7 +3,7 @@ import pandas as pd
 import plotly.express as px
 
 # 1. IDENTIFICAÇÃO CORRETA (Cuidado com o final 'l3o')
-SHEET_ID = "1jFpKsA1jxOchNS4s6yE5M9YvQz9yM_NgWONjly4il3o"
+SHEET_ID = "1jFpKsA1jxOchNS4s6yE5M9YvQz9yM_NgWONjly4iI3o"
 
 CONFIG = {
     "Financeiro": {"gid": "0", "cor": "#FFD700"},
