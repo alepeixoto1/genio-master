@@ -1,43 +1,46 @@
 import streamlit as st
 import pandas as pd
 
-# Link mestre que você gerou na Foto 3
-URL_MESTRE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQlUCy8YHlnRGlxmkkp-c9wbg9-ZqEVcubbjvUX715_SwQv1-YnNGpbiOFJ8QD2pyf2VSUGH14NI-VP/pub?output=csv"
-
+# Configuração da página
 st.set_page_config(page_title="Gênio Master", layout="wide")
 
-# LOGIN
-if "auth" not in st.session_state:
-    st.title("🤖 Gênio Master - Acesso")
+# Login
+if "logado" not in st.session_state:
+    st.title("🔒 Gênio Master")
     senha = st.text_input("Senha Master:", type="password")
     if st.button("Acessar"):
         if senha == "mestre2026":
-            st.session_state["auth"] = True
+            st.session_state["logado"] = True
             st.rerun()
         else:
             st.error("Senha incorreta")
     st.stop()
 
-# INTERFACE PRINCIPAL
-st.sidebar.title("Menu de Comando")
-opcao = st.sidebar.selectbox("Escolha a Visão:", ["Geral (Dados)", "Sustentabilidade (ESG)", "Nível de Serviço (SLA)"])
+st.title("📊 Painel de Facilities")
+
+# ID da sua planilha que confirmamos antes
+sheet_id = "1jFpKsA1jxOchNS4s6yE5M9YvQz9yM_NgWONjly4il3o"
+
+# Menu lateral para suas abas reais
+st.sidebar.header("Navegação")
+aba_nome = st.sidebar.selectbox("Escolha o Painel", ["Financeiro", "Ativos", "Esg", "Slas"])
+
+# Mapeamento dos GIDs das suas abas (vimos nas Fotos 63-66)
+gids = {
+    "Financeiro": "0",
+    "Ativos": "1179272110",
+    "Esg": "1626002778",
+    "Slas": "1805560751"
+}
 
 try:
-    # O Google Sheets publica por padrão a primeira aba. 
-    # Para ler as outras, usamos o parâmetro 'gid' que você enviou.
-    if opcao == "Geral (Dados)":
-        url = URL_MESTRE + "&gid=0"
-        st.header("📊 Dados da Operação")
-    elif opcao == "Sustentabilidade (ESG)":
-        url = URL_MESTRE + "&gid=1179272110"
-        st.header("🌱 Indicadores ESG")
-    elif opcao == "Nível de Serviço (SLA)":
-        url = URL_MESTRE + "&gid=2075740723"
-        st.header("📜 Gestão de SLAs")
-
+    # Monta a URL de exportação que o Google Sheets aceita
+    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gids[aba_nome]}"
     df = pd.read_csv(url)
+    
+    st.subheader(f"Dados: {aba_nome}")
     st.dataframe(df, use_container_width=True)
-    st.success(f"Dados de {opcao} atualizados!")
-
+    st.success("Dados carregados com sucesso!")
 except Exception as e:
-    st.error("Erro ao conectar com as abas da planilha. Verifique se o documento está 'Publicado na Web'.")
+    st.error("Erro ao carregar os dados desta aba.")
+    st.info("Verifique se você preencheu dados na planilha Google.")
