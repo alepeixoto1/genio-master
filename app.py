@@ -1,10 +1,9 @@
 import streamlit as st
 import pandas as pd
 
-# Configuração visual da página
 st.set_page_config(page_title="Gênio Master", layout="wide")
 
-# --- SISTEMA DE LOGIN ---
+# Login
 if "logado" not in st.session_state:
     st.title("🔒 Gênio Master")
     senha = st.text_input("Senha Master:", type="password")
@@ -16,42 +15,33 @@ if "logado" not in st.session_state:
             st.error("Senha incorreta")
     st.stop()
 
-# --- MENU LATERAL DE NAVEGAÇÃO ---
-st.sidebar.image("https://cdn-icons-png.flaticon.com/512/1055/1055644.png", width=100)
-st.sidebar.title("Navegação")
-aba_escolhida = st.sidebar.radio(
-    "Selecione o Painel:", 
-    ["Financeiro", "Ativos", "ESG", "SLAs"]
-)
+st.title("📊 Painel de Facilities")
 
-st.title(f"📊 Painel: {aba_escolhida}")
+# ID Único da sua planilha (confirmado)
+sheet_id = "1jFpKsA1jxOchNS4s6yE5M9YvQz9yM_NgWONjly4il3o"
 
-# ID Único da sua planilha (Extraído dos seus links)
-sheet_id = "1jFpKsA1jxOchNS4s6yE5M9YvQz9yM_NgWONjly4iI3o"
+# Menu lateral
+st.sidebar.header("Navegação")
+aba_nome = st.sidebar.selectbox("Escolha o Painel", ["Financeiro", "Ativos", "Esg", "Slas"])
 
-# Mapeamento EXATO dos GIDs que me enviou
+# GIDs das suas abas (Ajustados conforme seus novos links)
 gids = {
     "Financeiro": "0",
     "Ativos": "1179272110",
-    "ESG": "1026863401",
-    "SLAs": "2075740723"
+    "Esg": "1026863401",  # Conferido do seu link anterior
+    "Slas": "2075740723"  # Conferido do seu link anterior
 }
 
-# --- CARREGAMENTO DOS DADOS ---
 try:
-    # Cria o link de exportação específico para a aba selecionada
-    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gids[aba_escolhida]}"
-    
+    # URL de exportação
+    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gids[aba_nome]}"
     df = pd.read_csv(url)
     
-    # Exibição dos dados
-    if df.empty:
-        st.warning(f"A aba '{aba_escolhida}' está ligada, mas não tem dados na linha 2.")
-    else:
-        # Mostra a tabela de forma interativa
-        st.dataframe(df, use_container_width=True, hide_index=True)
-        st.success(f"Dados de {aba_escolhida} carregados com sucesso!")
+    st.subheader(f"Dados: {aba_nome}")
+    st.dataframe(df, use_container_width=True)
+    st.success(f"Conectado com sucesso à aba {aba_nome}!")
 
 except Exception as e:
-    st.error("Erro ao carregar os dados desta aba.")
-    st.info("Dica: Verifique se escreveu algo na segunda linha da aba no Google Sheets.")
+    st.error(f"A aba '{aba_nome}' ainda não foi configurada corretamente na planilha.")
+    st.info("Verifique se o nome da aba no Google Sheets está EXATAMENTE igual ao menu lateral.")
+    st.write(f"Erro técnico: {e}")
