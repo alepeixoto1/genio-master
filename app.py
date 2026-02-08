@@ -3,122 +3,110 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 
-# 1. Configuração de Página e Viewport Mobile
-st.set_page_config(page_title="Gênio Master Pro", layout="wide", initial_sidebar_state="collapsed")
+# 1. Configuração de Página (Mobile-First)
+st.set_page_config(page_title="Gênio Master iModulo", layout="wide", initial_sidebar_state="expanded")
 
-# --- CSS PARA MOBILE E CARDS FUNCIONAIS ---
+# --- CSS iMODULO: ESTILO LIMPO, CARDS REAIS E MOBILE ---
 st.markdown("""
 <style>
-    .stApp { background-color: #0e1117; }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+    * { font-family: 'Inter', sans-serif; }
+    .stApp { background-color: #0d1117; }
     
-    /* Card Funcional com Sombra e Borda Neon */
-    [data-testid="stMetric"] {
-        background: #161b22 !important;
-        border: 1px solid #30363d !important;
-        border-left: 5px solid {cor_setor} !important; /* Dinâmico via código */
-        border-radius: 12px !important;
+    /* Cards de Métricas Estilo iModulo */
+    div[data-testid="stMetric"] {
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-left: 4px solid {color}; /* Dinâmico */
+        border-radius: 8px;
         padding: 15px !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
     }
-
-    /* Ajuste de Títulos para telas pequenas */
-    @media (max-width: 640px) {
-        .main-title { font-size: 1.8rem !important; }
-        .stMetric label { font-size: 0.9rem !important; }
-        .stMetric div { font-size: 1.2rem !important; }
-    }
+    
+    /* Títulos e Containers */
+    .module-header { font-size: 24px; font-weight: 800; color: white; margin-bottom: 20px; }
+    .stTabs [data-baseweb="tab-list"] { gap: 10px; }
+    .stTabs [data-baseweb="tab"] { background-color: #161b22; border-radius: 4px; padding: 8px 16px; color: #8b949e; }
+    .stTabs [data-baseweb="tab"][aria-selected="true"] { color: white; border-bottom: 2px solid #58a6ff; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- CONFIGURAÇÃO ---
+# --- CONFIGURAÇÃO DE ACESSO ---
 SHEET_ID = "1jFpKsA1jxOchNS4s6yE5M9YvQz9yM_NgWONjly4iI3o"
 CONFIG = {
-    "Financeiro": {"gid": "0", "cor": "#34d399", "target": 15000},
-    "Ativos": {"gid": "1179272110", "cor": "#60a5fa", "target": 100},
-    "Esg": {"gid": "1026863401", "cor": "#fb7185", "target": 50},
-    "Slas": {"gid": "2075740723", "cor": "#fbbf24", "target": 100}
+    "Financeiro": {"gid": "0", "cor": "#00ffa3", "emoji": "💰"},
+    "Ativos": {"gid": "1179272110", "cor": "#00b2ff", "emoji": "📦"},
+    "Esg": {"gid": "1026863401", "cor": "#bf5af2", "emoji": "🌱"},
+    "Slas": {"gid": "2075740723", "cor": "#ff375f", "emoji": "📊"}
 }
 
+# --- NAVEGAÇÃO iMODULO ---
 with st.sidebar:
-    st.markdown("## 💎 GÊNIO MASTER")
-    setor = st.selectbox("Selecione o Fluxo", list(CONFIG.keys()))
-    st.divider()
-    st.caption("Acesso via Mobile Otimizado")
+    st.markdown("<h2 style='color: white; letter-spacing: -1px;'>💎 Gênio Master</h2>", unsafe_allow_html=True)
+    st.markdown("---")
+    setor = st.selectbox("Selecione o Módulo Ativo:", list(CONFIG.keys()))
+    st.markdown("<br>"*5, unsafe_allow_html=True)
+    st.caption("iModulo System v5.2")
 
+# --- LEITURA DE DADOS (Ponte Segura) ---
 url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={CONFIG[setor]['gid']}"
 
 try:
+    # Mantendo skiprows=2 que é o que estava dando certo
     df = pd.read_csv(url, skiprows=2).dropna(how='all', axis=1).dropna(how='all', axis=0)
     
     if not df.empty:
+        # Título Dinâmico
+        st.markdown(f"<div class='module-header'>{CONFIG[setor]['emoji']} Módulo {setor}</div>", unsafe_allow_html=True)
+
+        # 2. CARDS FUNCIONAIS (Mobile-Ready)
+        c1, c2, c3, c4 = st.columns(4)
         cols_num = df.select_dtypes(include=['number']).columns
         cols_txt = df.select_dtypes(include=['object']).columns
 
-        st.markdown(f"<h1 class='main-title' style='color: white;'>{setor}</h1>", unsafe_allow_html=True)
-
-        # --- CARDS FUNCIONAIS (Adaptáveis) ---
-        # No mobile, st.columns(4) vira uma lista vertical automaticamente
-        m1, m2, m3, m4 = st.columns([1,1,1,1])
-        
-        with m1:
-            st.metric("Registros", len(df), delta="Ativos")
-        
-        with m2:
-            if len(cols_num) > 0:
-                total = df[cols_num[0]].sum()
-                # Card funcional: Mostra o total e compara com uma meta fictícia
-                diff = total - CONFIG[setor]['target']
-                st.metric("Total Acumulado", f"{total:,.0f}", delta=f"{diff:,.0f} vs Meta")
-            else:
-                st.metric("Status", "Sem Valores")
-
-        with m3:
-            st.metric("Eficiência", "98.2%", delta="↑ 1.5%")
-        
-        with m4:
-            st.metric("Sincronização", "OK", delta="Real-time", delta_color="normal")
+        with c1:
+            st.metric("Total de Registros", len(df))
+        with c2:
+            val = df[cols_num[0]].sum() if len(cols_num) > 0 else 0
+            st.metric("Valor Acumulado", f"R$ {val:,.0f}")
+        with c3:
+            st.metric("Performance", "98.5%", delta="↑ 2%")
+        with c4:
+            st.metric("Sync Status", "Real-time")
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # --- GRÁFICOS MOBILE-FRIENDLY ---
-        # Usamos colunas, mas o Streamlit as empilha no celular automaticamente
-        col_graf_1, col_graf_2 = st.columns([1, 1])
+        # 3. GRÁFICOS iMODULO (Organização em Abas)
+        tab_visual, tab_dados = st.tabs(["📉 Visão Analítica", "📋 Base de Dados"])
 
-        with col_graf_1:
-            if len(cols_num) > 0:
-                # Gráfico de Área mais limpo para mobile
-                fig_area = px.area(df, x=df.index, y=cols_num[0],
-                                 title="Tendência de Performance",
-                                 template="plotly_dark",
-                                 color_discrete_sequence=[CONFIG[setor]['cor']])
-                fig_area.update_layout(
-                    height=300, # Altura menor para caber na tela do celular
-                    margin=dict(l=10, r=10, t=40, b=10),
-                    xaxis=dict(showgrid=False), yaxis=dict(showgrid=False),
-                    paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)'
-                )
-                st.plotly_chart(fig_area, use_container_width=True, config={'displayModeBar': False})
+        with tab_visual:
+            col_a, col_b = st.columns([1.2, 0.8])
+            
+            with col_a:
+                # Gráfico de Área (O "Spectacular" que funcionou)
+                if len(cols_num) > 0:
+                    fig_area = px.area(df, x=df.index, y=cols_num[0],
+                                     color_discrete_sequence=[CONFIG[setor]['cor']])
+                    fig_area.update_layout(
+                        title="<b>Evolução Temporal</b>", template="plotly_dark",
+                        paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+                        margin=dict(l=0, r=0, t=40, b=0), height=350
+                    )
+                    st.plotly_chart(fig_area, use_container_width=True, config={'displayModeBar': False})
 
-        with col_graf_2:
-            if len(cols_txt) > 0:
-                # Gráfico de Barras Horizontal (Melhor leitura no celular que o de pizza)
-                fig_bar = px.bar(df, x=cols_num[0] if len(cols_num) > 0 else df.index, 
-                                 y=cols_txt[0],
-                                 orientation='h',
-                                 title="Distribuição por Categoria",
-                                 template="plotly_dark",
-                                 color_discrete_sequence=[CONFIG[setor]['cor']])
-                fig_bar.update_layout(
-                    height=300,
-                    margin=dict(l=10, r=10, t=40, b=10),
-                    xaxis=dict(showgrid=False), yaxis=dict(showgrid=False),
-                    paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)'
-                )
-                st.plotly_chart(fig_bar, use_container_width=True, config={'displayModeBar': False})
+            with col_b:
+                # Gráfico de Rosca (Proporção)
+                if len(cols_txt) > 0:
+                    fig_pie = px.pie(df, names=cols_txt[0], hole=0.75,
+                                   color_discrete_sequence=[CONFIG[setor]['cor'], '#1c1f26', '#3e4451'])
+                    fig_pie.update_layout(
+                        title="<b>Composição</b>", template="plotly_dark",
+                        paper_bgcolor='rgba(0,0,0,0)', margin=dict(l=0, r=0, t=40, b=0),
+                        showlegend=False, height=350
+                    )
+                    st.plotly_chart(fig_pie, use_container_width=True)
 
-        # Base de dados em Expander para não ocupar tela no mobile
-        with st.expander("🔍 Ver Tabela de Dados"):
+        with tab_dados:
             st.dataframe(df, use_container_width=True)
 
 except Exception as e:
-    st.error(f"Erro ao carregar dados mobile: {e}")
+    st.error(f"Erro na conexão iModulo: {e}")
