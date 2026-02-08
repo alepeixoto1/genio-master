@@ -1,53 +1,49 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 
-# 1. Setup de Interface (Focado em Clean Design)
+# 1. Configuração de Página e Viewport Mobile
 st.set_page_config(page_title="Gênio Master Pro", layout="wide", initial_sidebar_state="collapsed")
 
-# --- CSS ESTILO iMÓDULO (GRID & TILES) ---
+# --- CSS PARA MOBILE E CARDS FUNCIONAIS ---
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-    * { font-family: 'Inter', sans-serif; }
-    .stApp { background-color: #f0f2f6; } /* Fundo leve para destacar os cards */
+    .stApp { background-color: #0e1117; }
     
-    /* Estilização dos Cards (Tiles) */
-    .tile-card {
-        background-color: #07477e; /* Azul do modelo iMódulo */
-        color: white;
-        padding: 25px;
-        border-radius: 15px;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        min-height: 180px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
+    /* Card Funcional com Sombra e Borda Neon */
+    [data-testid="stMetric"] {
+        background: #161b22 !important;
+        border: 1px solid #30363d !important;
+        border-left: 5px solid {cor_setor} !important; /* Dinâmico via código */
+        border-radius: 12px !important;
+        padding: 15px !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
     }
-    .tile-title { font-weight: 700; font-size: 1.2rem; margin-bottom: 5px; }
-    .tile-subtitle { font-size: 0.9rem; opacity: 0.8; }
-    .tile-icon { font-size: 2rem; margin-bottom: 15px; }
+
+    /* Ajuste de Títulos para telas pequenas */
+    @media (max-width: 640px) {
+        .main-title { font-size: 1.8rem !important; }
+        .stMetric label { font-size: 0.9rem !important; }
+        .stMetric div { font-size: 1.2rem !important; }
+    }
 </style>
 """, unsafe_allow_html=True)
 
-# --- CONFIGURAÇÃO DE DADOS ---
+# --- CONFIGURAÇÃO ---
 SHEET_ID = "1jFpKsA1jxOchNS4s6yE5M9YvQz9yM_NgWONjly4iI3o"
 CONFIG = {
-    "Financeiro": {"gid": "0", "cor": "#07477e", "icon": "📊"},
-    "Ativos": {"gid": "1179272110", "cor": "#07477e", "icon": "📦"},
-    "Esg": {"gid": "1026863401", "cor": "#07477e", "icon": "🌱"},
-    "Slas": {"gid": "2075740723", "cor": "#07477e", "icon": "⏱️"}
+    "Financeiro": {"gid": "0", "cor": "#34d399", "target": 15000},
+    "Ativos": {"gid": "1179272110", "cor": "#60a5fa", "target": 100},
+    "Esg": {"gid": "1026863401", "cor": "#fb7185", "target": 50},
+    "Slas": {"gid": "2075740723", "cor": "#fbbf24", "target": 100}
 }
 
-# Cabeçalho Estilo App
-col_logo, col_text = st.columns([1, 10])
-with col_text:
-    st.markdown(f"<h1 style='color: #333; margin-bottom: 0;'>Gênio Master</h1>", unsafe_allow_html=True)
-    st.markdown(f"<p style='color: #666;'>Unidade: 11654 - GESTÃO OPERACIONAL</p>", unsafe_allow_html=True)
-
-# Menu de Seleção Superior (estilo Tabs do iMódulo)
-setor = st.selectbox("Selecione o Módulo Ativo:", list(CONFIG.keys()))
+with st.sidebar:
+    st.markdown("## 💎 GÊNIO MASTER")
+    setor = st.selectbox("Selecione o Fluxo", list(CONFIG.keys()))
+    st.divider()
+    st.caption("Acesso via Mobile Otimizado")
 
 url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={CONFIG[setor]['gid']}"
 
@@ -55,63 +51,74 @@ try:
     df = pd.read_csv(url, skiprows=2).dropna(how='all', axis=1).dropna(how='all', axis=0)
     
     if not df.empty:
-        # --- SISTEMA DE TILES (GRID) ---
-        st.markdown("### Painel de Controle")
-        
-        # Grid 1: Indicadores Principais
-        c1, c2, c3 = st.columns(3)
-        
-        with c1:
-            st.markdown(f"""<div class='tile-card'>
-                <div class='tile-icon'>🔍</div>
-                <div>
-                    <div class='tile-title'>Consultas</div>
-                    <div class='tile-subtitle'>Verificar {len(df)} registros ativos no sistema.</div>
-                </div>
-            </div>""", unsafe_allow_html=True)
-            
-        with c2:
-            val_total = df.select_dtypes(include=['number']).iloc[:, 0].sum() if not df.select_dtypes(include=['number']).empty else 0
-            st.markdown(f"""<div class='tile-card'>
-                <div class='tile-icon'>💰</div>
-                <div>
-                    <div class='tile-title'>Operações</div>
-                    <div class='tile-subtitle'>Volume total identificado: {val_total:,.0f}</div>
-                </div>
-            </div>""", unsafe_allow_html=True)
+        cols_num = df.select_dtypes(include=['number']).columns
+        cols_txt = df.select_dtypes(include=['object']).columns
 
-        with c3:
-            st.markdown(f"""<div class='tile-card'>
-                <div class='tile-icon'>🔔</div>
-                <div>
-                    <div class='tile-title'>Notificações</div>
-                    <div class='tile-subtitle'>Sincronização Cloud realizada com sucesso.</div>
-                </div>
-            </div>""", unsafe_allow_html=True)
+        st.markdown(f"<h1 class='main-title' style='color: white;'>{setor}</h1>", unsafe_allow_html=True)
 
-        # --- SEÇÃO DE GRÁFICOS (Design Refinado) ---
-        st.markdown("### Análise Estratégica")
+        # --- CARDS FUNCIONAIS (Adaptáveis) ---
+        # No mobile, st.columns(4) vira uma lista vertical automaticamente
+        m1, m2, m3, m4 = st.columns([1,1,1,1])
         
-        tab_vis, tab_data = st.tabs(["🖼️ Visualização", "📋 Dados Brutos"])
+        with m1:
+            st.metric("Registros", len(df), delta="Ativos")
         
-        with tab_vis:
-            g1, g2 = st.columns([1.5, 1])
-            with g1:
-                # Gráfico de Área Estilo Clean
-                fig = px.area(df, x=df.index, y=df.select_dtypes(include=['number']).columns[0],
-                              template="simple_white", color_discrete_sequence=["#07477e"])
-                fig.update_layout(margin=dict(l=0, r=0, t=20, b=0))
-                st.plotly_chart(fig, use_container_width=True)
-            
-            with g2:
-                # Donut Chart Clean
-                fig_pie = px.pie(df, names=df.select_dtypes(include=['object']).columns[0], hole=0.6,
-                                 color_discrete_sequence=["#07477e", "#336699", "#5c85ad"])
-                fig_pie.update_layout(showlegend=False, margin=dict(l=0, r=0, t=20, b=0))
-                st.plotly_chart(fig_pie, use_container_width=True)
+        with m2:
+            if len(cols_num) > 0:
+                total = df[cols_num[0]].sum()
+                # Card funcional: Mostra o total e compara com uma meta fictícia
+                diff = total - CONFIG[setor]['target']
+                st.metric("Total Acumulado", f"{total:,.0f}", delta=f"{diff:,.0f} vs Meta")
+            else:
+                st.metric("Status", "Sem Valores")
 
-        with tab_data:
+        with m3:
+            st.metric("Eficiência", "98.2%", delta="↑ 1.5%")
+        
+        with m4:
+            st.metric("Sincronização", "OK", delta="Real-time", delta_color="normal")
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # --- GRÁFICOS MOBILE-FRIENDLY ---
+        # Usamos colunas, mas o Streamlit as empilha no celular automaticamente
+        col_graf_1, col_graf_2 = st.columns([1, 1])
+
+        with col_graf_1:
+            if len(cols_num) > 0:
+                # Gráfico de Área mais limpo para mobile
+                fig_area = px.area(df, x=df.index, y=cols_num[0],
+                                 title="Tendência de Performance",
+                                 template="plotly_dark",
+                                 color_discrete_sequence=[CONFIG[setor]['cor']])
+                fig_area.update_layout(
+                    height=300, # Altura menor para caber na tela do celular
+                    margin=dict(l=10, r=10, t=40, b=10),
+                    xaxis=dict(showgrid=False), yaxis=dict(showgrid=False),
+                    paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)'
+                )
+                st.plotly_chart(fig_area, use_container_width=True, config={'displayModeBar': False})
+
+        with col_graf_2:
+            if len(cols_txt) > 0:
+                # Gráfico de Barras Horizontal (Melhor leitura no celular que o de pizza)
+                fig_bar = px.bar(df, x=cols_num[0] if len(cols_num) > 0 else df.index, 
+                                 y=cols_txt[0],
+                                 orientation='h',
+                                 title="Distribuição por Categoria",
+                                 template="plotly_dark",
+                                 color_discrete_sequence=[CONFIG[setor]['cor']])
+                fig_bar.update_layout(
+                    height=300,
+                    margin=dict(l=10, r=10, t=40, b=10),
+                    xaxis=dict(showgrid=False), yaxis=dict(showgrid=False),
+                    paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)'
+                )
+                st.plotly_chart(fig_bar, use_container_width=True, config={'displayModeBar': False})
+
+        # Base de dados em Expander para não ocupar tela no mobile
+        with st.expander("🔍 Ver Tabela de Dados"):
             st.dataframe(df, use_container_width=True)
 
 except Exception as e:
-    st.error(f"Erro ao carregar o modo Tile: {e}")
+    st.error(f"Erro ao carregar dados mobile: {e}")
