@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # Link direto da sua planilha (Foto 3)
-URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQlUCy8YHlnRGlxmkkp-c9wbg9-ZqEVcubbjvUX715_SwQv1-YnNGpbiOFJ8QD2pyf2VSUGH14NI-VP/pub?output=csv"
+URL = "https://docs.google.com/spreadsheets/d/1jFpKsA1jxOchNS4s6yE5M9YvQz9yM_NgWONjly4iI3o/export?format=csv"
 
 st.set_page_config(page_title="Gênio Master", layout="wide")
 
