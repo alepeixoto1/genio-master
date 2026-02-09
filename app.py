@@ -202,10 +202,5 @@ except Exception as e:
 
     st.error(f"Erro ao carregar dados: {e}")
 
-cd caminho\da\pasta\genio-master
-git add app.py
-git commit -m "Atualização Streamlit 2026"
-git push
-Exemplo real:
 
 
