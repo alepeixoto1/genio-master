@@ -2,189 +2,212 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# =====================================
-# CONFIGURAÇÃO DA PÁGINA
-# =====================================
+# =========================================
+# CONFIG
+# =========================================
 
 st.set_page_config(
     page_title="Gênio Master",
-    page_icon="📊",
-    layout="wide"
+    layout="wide",
+    page_icon="💎"
 )
 
-# =====================================
-# MENU LATERAL
-# =====================================
+# =========================================
+# CSS PROFISSIONAL
+# =========================================
 
-st.sidebar.title("🏠 Gênio Master")
+st.markdown("""
+<style>
 
-pagina = st.sidebar.selectbox(
-    "Selecione o módulo",
+.stApp {
+    background-color: #f4f7fb;
+}
+
+.card {
+    background: linear-gradient(135deg,#0f172a,#1e293b);
+    padding:20px;
+    border-radius:12px;
+    color:white;
+}
+
+.metric-title {
+    font-size:13px;
+    opacity:0.7;
+}
+
+.metric-value {
+    font-size:28px;
+    font-weight:bold;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+# =========================================
+# MENU
+# =========================================
+
+menu = st.sidebar.selectbox(
+    "Menu",
     [
-        "📊 Dashboard",
-        "💰 Financeiro",
-        "📦 Ativos",
-        "🌱 ESG",
-        "⏱️ SLAs"
+        "Dashboard",
+        "Financeiro",
+        "Ativos",
+        "ESG",
+        "SLAs"
     ]
 )
 
-# =====================================
-# CONEXÃO COM GOOGLE SHEETS
-# =====================================
+# =========================================
+# GOOGLE SHEETS
+# =========================================
 
 SHEET_ID = "1jFpKsA1jxOchNS4s6yE5M9YvQz9yM_NgWONjly4iI3o"
 
-def carregar(gid):
+def load(gid):
     url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={gid}"
     return pd.read_csv(url)
 
-df_financeiro = carregar("0")
-df_ativos = carregar("1179272110")
-df_esg = carregar("1026863401")
-df_slas = carregar("2075740723")
+df_fin = load("0")
+df_ativos = load("1179272110")
+df_esg = load("1026863401")
+df_slas = load("2075740723")
 
-# =====================================
+# =========================================
 # DASHBOARD
-# =====================================
+# =========================================
 
-if pagina == "📊 Dashboard":
+if menu == "Dashboard":
 
-    st.title("📊 Dashboard Geral")
+    st.title("💎 Dashboard Executivo")
 
-    total_previsto = df_financeiro["Previsto"].sum()
-    total_realizado = df_financeiro["Realizado"].sum()
-    total_saving = df_financeiro["Saving"].sum()
-    total_ativos = len(df_ativos)
+    total = df_fin["Realizado"].sum()
+    saving = df_fin["Saving"].sum()
+    ativos = len(df_ativos)
 
-    col1, col2, col3, col4 = st.columns(4)
+    c1,c2,c3 = st.columns(3)
 
-    col1.metric("Previsto", f"R$ {total_previsto:,.2f}")
-    col2.metric("Realizado", f"R$ {total_realizado:,.2f}")
-    col3.metric("Saving", f"R$ {total_saving:,.2f}")
-    col4.metric("Ativos", total_ativos)
+    with c1:
+        st.markdown(f"""
+        <div class="card">
+        <div class="metric-title">REALIZADO</div>
+        <div class="metric-value">R$ {total:,.0f}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    st.divider()
+    with c2:
+        st.markdown(f"""
+        <div class="card">
+        <div class="metric-title">SAVING</div>
+        <div class="metric-value">R$ {saving:,.0f}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    col1, col2 = st.columns(2)
+    with c3:
+        st.markdown(f"""
+        <div class="card">
+        <div class="metric-title">ATIVOS</div>
+        <div class="metric-value">{ativos}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    fig1 = px.bar(
-        df_financeiro,
+    col1,col2 = st.columns(2)
+
+    fig1 = px.line(
+        df_fin,
         x="Mês",
-        y=["Previsto", "Realizado"],
-        barmode="group",
-        title="Financeiro Mensal",
-        template="plotly_white"
+        y="Realizado",
+        title="Performance"
     )
 
     col1.plotly_chart(fig1, use_container_width=True)
 
     fig2 = px.pie(
-        df_financeiro,
+        df_fin,
         names="Categoria",
         values="Realizado",
-        title="Distribuição por Categoria",
-        hole=0.5
+        hole=0.6
     )
 
     col2.plotly_chart(fig2, use_container_width=True)
 
-# =====================================
+# =========================================
 # FINANCEIRO
-# =====================================
+# =========================================
 
-elif pagina == "💰 Financeiro":
+elif menu == "Financeiro":
 
     st.title("💰 Financeiro")
 
-    total_previsto = df_financeiro["Previsto"].sum()
-    total_realizado = df_financeiro["Realizado"].sum()
-    total_saving = df_financeiro["Saving"].sum()
+    c1,c2,c3 = st.columns(3)
 
-    col1, col2, col3 = st.columns(3)
+    c1.metric("Previsto", f"R$ {df_fin['Previsto'].sum():,.0f}")
+    c2.metric("Realizado", f"R$ {df_fin['Realizado'].sum():,.0f}")
+    c3.metric("Saving", f"R$ {df_fin['Saving'].sum():,.0f}")
 
-    col1.metric("Previsto Total", f"R$ {total_previsto:,.2f}")
-    col2.metric("Realizado Total", f"R$ {total_realizado:,.2f}")
-    col3.metric("Saving Total", f"R$ {total_saving:,.2f}")
-
-    st.divider()
-
-    fig = px.line(
-        df_financeiro,
+    fig = px.bar(
+        df_fin,
         x="Mês",
-        y=["Previsto", "Realizado", "Saving"],
-        markers=True,
-        title="Evolução Financeira"
+        y=["Previsto","Realizado"]
     )
 
     st.plotly_chart(fig, use_container_width=True)
 
-    st.divider()
+    st.dataframe(df_fin, use_container_width=True)
 
-    st.subheader("Tabela Financeira")
-
-    st.dataframe(
-        df_financeiro,
-        use_container_width=True
-    )
-
-    csv = df_financeiro.to_csv(index=False).encode("utf-8")
+    csv = df_fin.to_csv(index=False).encode()
 
     st.download_button(
-        "📥 Baixar CSV",
+        "Baixar CSV",
         csv,
-        "financeiro.csv",
-        "text/csv"
+        "financeiro.csv"
     )
 
-# =====================================
+# =========================================
 # ATIVOS
-# =====================================
+# =========================================
 
-elif pagina == "📦 Ativos":
+elif menu == "Ativos":
 
     st.title("📦 Ativos")
 
-    st.metric("Total de Ativos", len(df_ativos))
+    st.metric("Total", len(df_ativos))
 
-    st.divider()
+    st.dataframe(df_ativos, use_container_width=True)
 
-    st.dataframe(
-        df_ativos,
-        use_container_width=True
-    )
+    fig = px.bar(df_ativos)
 
-# =====================================
+    st.plotly_chart(fig, use_container_width=True)
+
+# =========================================
 # ESG
-# =====================================
+# =========================================
 
-elif pagina == "🌱 ESG":
+elif menu == "ESG":
 
     st.title("🌱 ESG")
 
-    st.metric("Total Registros ESG", len(df_esg))
+    st.metric("Total", len(df_esg))
 
-    st.divider()
+    st.dataframe(df_esg, use_container_width=True)
 
-    st.dataframe(
-        df_esg,
-        use_container_width=True
-    )
+    fig = px.bar(df_esg)
 
-# =====================================
-# SLAS
-# =====================================
+    st.plotly_chart(fig, use_container_width=True)
 
-elif pagina == "⏱️ SLAs":
+# =========================================
+# SLAs
+# =========================================
+
+elif menu == "SLAs":
 
     st.title("⏱️ SLAs")
 
-    st.metric("Total SLAs", len(df_slas))
+    st.metric("Total", len(df_slas))
 
-    st.divider()
+    st.dataframe(df_slas, use_container_width=True)
 
-    st.dataframe(
-        df_slas,
-        use_container_width=True
-    )
+    fig = px.bar(df_slas)
+
+    st.plotly_chart(fig, use_container_width=True)
 
