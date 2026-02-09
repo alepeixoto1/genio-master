@@ -1,177 +1,186 @@
 import streamlit as st
 import pandas as pd
-import plotly.graph_objects as go
 import plotly.express as px
+import plotly.graph_objects as go
+from datetime import datetime
+import base64
 
-# CONFIG
+# -----------------------------------
+# CONFIGURAÇÃO DA PÁGINA
+# -----------------------------------
+
 st.set_page_config(
-    page_title="Gênio Master Pro",
-    layout="wide",
-    initial_sidebar_state="collapsed"
+    page_title="Gênio Master • Financeiro",
+    page_icon="💰",
+    layout="wide"
 )
 
-# CSS PREMIUM
+# -----------------------------------
+# CSS PROFISSIONAL
+# -----------------------------------
+
 st.markdown("""
 <style>
 
-.stApp {
-    background: linear-gradient(180deg,#0f172a 0%,#020617 100%);
+.main {
+    background: linear-gradient(135deg, #0b1a3a 0%, #020617 100%);
 }
 
-.block-container {
-    padding-top: 2rem;
-}
-
-.genio-card {
+.card {
     background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.08);
-    backdrop-filter: blur(10px);
-    border-radius: 16px;
     padding: 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.1);
 }
 
-.card-title {
-    font-size: 13px;
+.metric-title {
+    font-size: 14px;
     color: #94a3b8;
 }
 
-.card-value {
+.metric-value {
     font-size: 28px;
     font-weight: bold;
     color: white;
 }
 
+.title {
+    font-size: 36px;
+    font-weight: bold;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
-# CONFIG PLANILHA
-SHEET_ID = "1jFpKsA1jxOchNS4s6yE5M9YvQz9yM_NgWONjly4iI3o"
+# -----------------------------------
+# DADOS EXEMPLO
+# -----------------------------------
 
-CONFIG = {
-    "Financeiro": {"gid": "0", "icon": "💰"},
-    "Ativos": {"gid": "1179272110", "icon": "📦"},
-    "Esg": {"gid": "1026863401", "icon": "🌱"},
-    "Slas": {"gid": "2075740723", "icon": "⏱️"}
+data = {
+    "data": pd.date_range(start="2024-01-01", periods=5, freq="M"),
+    "valor": [1000, 2500, 1800, 3200, 4100],
+    "mes": ["março", "abril", "maio", "junho", "julho"]
 }
 
-setor = st.sidebar.selectbox("Módulo", CONFIG.keys())
+df = pd.DataFrame(data)
 
-url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={CONFIG[setor]['gid']}"
+# -----------------------------------
+# HEADER
+# -----------------------------------
 
-try:
+st.markdown("# 💰 Gênio Master • Financeiro")
 
-    df = pd.read_csv(url, skiprows=2)
+col1, col2, col3, col4 = st.columns(4)
 
-    df = df.dropna(how="all", axis=1)
-    df = df.dropna(how="all", axis=0)
+col1.metric("TOTAL REGISTROS", len(df))
+col2.metric("VOLUME", df["valor"].sum())
+col3.metric("STATUS", "Online")
+col4.metric("SYNC", "100%")
 
-    st.markdown(f"# {CONFIG[setor]['icon']} Gênio Master • {setor}")
+st.divider()
 
-    cols_num = df.select_dtypes(include="number").columns
+# -----------------------------------
+# FILTROS
+# -----------------------------------
 
-    # KPIs
-    c1,c2,c3,c4 = st.columns(4)
+st.subheader("Filtros")
 
-    with c1:
-        st.markdown(f"""
-        <div class="genio-card">
-        <div class="card-title">TOTAL REGISTROS</div>
-        <div class="card-value">{len(df)}</div>
-        </div>
-        """, unsafe_allow_html=True)
+mes = st.selectbox(
+    "Selecionar mês",
+    ["Todos"] + list(df["mes"].unique())
+)
 
-    with c2:
-        total = int(df[cols_num[0]].sum()) if len(cols_num)>0 else 0
-        st.markdown(f"""
-        <div class="genio-card">
-        <div class="card-title">VOLUME</div>
-        <div class="card-value">{total}</div>
-        </div>
-        """, unsafe_allow_html=True)
+if mes != "Todos":
+    df = df[df["mes"] == mes]
 
-    with c3:
-        st.markdown("""
-        <div class="genio-card">
-        <div class="card-title">STATUS</div>
-        <div class="card-value">Online</div>
-        </div>
-        """, unsafe_allow_html=True)
+# -----------------------------------
+# GRÁFICO 1 — LINHA MODERNA
+# -----------------------------------
 
-    with c4:
-        st.markdown("""
-        <div class="genio-card">
-        <div class="card-title">SYNC</div>
-        <div class="card-value">100%</div>
-        </div>
-        """, unsafe_allow_html=True)
+col1, col2 = st.columns(2)
 
-    st.markdown("## Analytics")
+with col1:
 
-    g1,g2 = st.columns(2)
+    fig = px.area(
+        df,
+        x="data",
+        y="valor",
+        title="Tendência Acumulada",
+        template="plotly_dark"
+    )
 
-    # AREA CHART PREMIUM
-    with g1:
+    fig.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(color="white")
+    )
 
-        if len(cols_num)>0:
+    st.plotly_chart(fig, use_container_width=True)
 
-            fig = go.Figure()
+# -----------------------------------
+# GRÁFICO 2 — DONUT
+# -----------------------------------
 
-            fig.add_trace(go.Scatter(
-                x=df.index,
-                y=df[cols_num[0]],
-                mode='lines',
-                line=dict(
-                    width=4,
-                    color='#3b82f6'
-                ),
-                fill='tozeroy',
-                fillcolor='rgba(59,130,246,0.2)'
-            ))
+with col2:
 
-            fig.update_layout(
+    fig2 = go.Figure(data=[go.Pie(
+        labels=df["mes"],
+        values=df["valor"],
+        hole=.6
+    )])
 
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)',
+    fig2.update_layout(
+        title="Distribuição",
+        template="plotly_dark"
+    )
 
-                font=dict(color="white"),
+    st.plotly_chart(fig2, use_container_width=True)
 
-                margin=dict(l=0,r=0,t=30,b=0),
+# -----------------------------------
+# BOTÃO GERAR RELATÓRIO
+# -----------------------------------
 
-                xaxis=dict(showgrid=False),
+st.divider()
 
-                yaxis=dict(
-                    gridcolor='rgba(255,255,255,0.05)'
-                )
-            )
+col1, col2 = st.columns(2)
 
-            st.plotly_chart(fig, width="stretch")
+with col1:
 
-    # DONUT PREMIUM
-    with g2:
+    if st.button("📄 Gerar Relatório"):
 
-        cols_txt = df.select_dtypes(include="object").columns
+        total = df["valor"].sum()
 
-        if len(cols_txt)>0:
+        st.success(f"""
+        Relatório gerado com sucesso!
 
-            fig2 = px.pie(
-                df,
-                names=cols_txt[0],
-                hole=0.8
-            )
+        Total: R$ {total:,.2f}
+        Registros: {len(df)}
+        """)
 
-            fig2.update_layout(
+# -----------------------------------
+# EXPORTAR CSV
+# -----------------------------------
 
-                paper_bgcolor='rgba(0,0,0,0)',
-                font=dict(color="white"),
+with col2:
 
-                showlegend=True,
+    csv = df.to_csv(index=False).encode()
 
-                margin=dict(l=0,r=0,t=30,b=0)
-            )
+    st.download_button(
+        "⬇ Exportar Dados",
+        csv,
+        "relatorio.csv",
+        "text/csv"
+    )
 
-            st.plotly_chart(fig2, width="stretch")
+# -----------------------------------
+# EXPORTAR PDF (SIMULAÇÃO)
+# -----------------------------------
 
-except Exception as e:
+st.download_button(
+    "⬇ Exportar PDF",
+    csv,
+    "relatorio.pdf",
+    "application/pdf"
+)
 
-    st.error(e)
 
