@@ -3,119 +3,119 @@ import pandas as pd
 import plotly.express as px
 
 # =====================================================
-# CONFIGURAÇÃO E ESTILO (PADRÃO PREMIUM)
+# CONFIGURAÇÃO E ESTILO (LIGHT MODE)
 # =====================================================
 st.set_page_config(page_title="Gênio Master", layout="wide", page_icon="💎")
 
 st.markdown("""
 <style>
-    .stApp { background-color: #0f172a; color: white; }
-    [data-testid="stSidebar"] { background-color: #1e293b; }
+    /* Fundo claro e fontes escuras */
+    .stApp { background-color: #f8fafc; color: #1e293b; }
+    [data-testid="stSidebar"] { background-color: #ffffff; border-right: 1px solid #e2e8f0; }
+    
+    /* Cards Claros com Sombra Suave */
     .card {
-        background: linear-gradient(135deg, #1e293b, #0f172a);
-        padding: 20px; border-radius: 12px; border: 1px solid #38bdf8;
-        text-align: center; margin-bottom: 15px;
+        background: white;
+        padding: 20px;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        text-align: center;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
     }
-    .card-title { font-size: 11px; color: #94a3b8; text-transform: uppercase; }
-    .card-value { font-size: 24px; font-weight: bold; color: #38bdf8; }
+    .card-title { font-size: 13px; color: #64748b; font-weight: 600; text-transform: uppercase; }
+    .card-value { font-size: 28px; font-weight: 800; color: #0f172a; margin-top: 8px; }
+    
+    /* Ajuste de títulos Streamlit para modo claro */
+    h1, h2, h3 { color: #0f172a !important; font-weight: 700 !important; }
 </style>
 """, unsafe_allow_html=True)
 
 # =====================================================
-# CONEXÃO E LIMPEZA DE DADOS
+# FUNÇÃO DE CARREGAMENTO SEGURO
 # =====================================================
 SHEET_ID = "1jFpKsA1jxOchNS4s6yE5M9YvQz9yM_NgWONjly4iI3o"
 
-def carregar_seguro(gid):
+def carregar(gid):
     try:
         url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={gid}"
         df = pd.read_csv(url)
         df.columns = df.columns.str.strip()
-        # Converte moedas e números brasileiros (1.500,00 -> 1500.00)
-        for col in df.columns:
-            if df[col].dtype == 'object':
-                try:
-                    df[col] = pd.to_numeric(df[col].str.replace('.', '').str.replace(',', '.'), errors='ignore')
-                except: pass
+        # Limpeza de números brasileiros
+        for col in ["Previsto", "Realizado", "Saving", "Performance"]:
+            if col in df.columns:
+                df[col] = pd.to_numeric(df[col].astype(str).str.replace('.', '').str.replace(',', '.'), errors='coerce')
         return df
-    except: return pd.DataFrame()
+    except:
+        return pd.DataFrame()
 
-df_fin = carregar_seguro("0")
-df_ativos = carregar_seguro("1179272110")
-df_esg = carregar_seguro("1026863401")
-df_slas = carregar_seguro("2075740723")
+df_fin = carregar("0")
+df_ativos = carregar("1179272110")
+df_esg = carregar("1026863401")
+df_slas = carregar("2075740723")
 
 # =====================================================
 # MENU LATERAL
 # =====================================================
 with st.sidebar:
-    st.image("https://cdn-icons-png.flaticon.com/512/625/625099.png", width=50)
-    st.title("Gênio Master")
+    st.title("💎 Gênio Master")
     menu = st.radio("Navegação", ["Dashboard", "Financeiro", "Ativos", "ESG", "SLAs"])
 
 # =====================================================
-# PÁGINAS COM GRÁFICOS DIFERENCIADOS
+# LÓGICA DAS PÁGINAS (GRÁFICOS EXCLUSIVOS)
 # =====================================================
 
-# 1. DASHBOARD: VISÃO EXECUTIVA (CARTÕES + ROSCA)
+# 1. DASHBOARD: CARTÕES + ROSCA
 if menu == "Dashboard":
-    st.header("💎 Dashboard Executivo")
+    st.title("📊 Resumo Executivo")
+    
     c1, c2, c3 = st.columns(3)
     realizado = df_fin["Realizado"].sum() if "Realizado" in df_fin.columns else 0
     saving = df_fin["Saving"].sum() if "Saving" in df_fin.columns else 0
     
-    c1.markdown(f'<div class="card"><div class="card-title">Realizado Total</div><div class="card-value">R$ {realizado:,.0f}</div></div>', unsafe_allow_html=True)
-    c2.markdown(f'<div class="card"><div class="card-title">Saving Total</div><div class="card-value">R$ {saving:,.0f}</div></div>', unsafe_allow_html=True)
-    c3.markdown(f'<div class="card"><div class="card-title">Itens Ativos</div><div class="card-value">{len(df_ativos)}</div></div>', unsafe_allow_html=True)
+    c1.markdown(f'<div class="card"><div class="card-title">Realizado</div><div class="card-value">R$ {realizado:,.0f}</div></div>', unsafe_allow_html=True)
+    c2.markdown(f'<div class="card"><div class="card-title">Saving</div><div class="card-value">R$ {saving:,.0f}</div></div>', unsafe_allow_html=True)
+    c3.markdown(f'<div class="card"><div class="card-title">Ativos</div><div class="card-value">{len(df_ativos)}</div></div>', unsafe_allow_html=True)
 
-    st.subheader("Distribuição de Custos por Categoria")
-    fig_dash = px.pie(df_fin, names="Categoria", values="Realizado", hole=0.7, template="plotly_dark", color_discrete_sequence=px.colors.qualitative.Pastel)
-    st.plotly_chart(fig_dash, use_container_width=True)
+    st.subheader("Distribuição por Categoria")
+    fig_pie = px.pie(df_fin, names="Categoria", values="Realizado", hole=0.5, template="plotly_white", color_discrete_sequence=px.colors.qualitative.Safe)
+    st.plotly_chart(fig_pie, use_container_width=True)
 
-# 2. FINANCEIRO: PERFORMANCE (GRÁFICO DE ÁREA/LINHA)
+# 2. FINANCEIRO: GRÁFICO DE BARRAS AGRUPADAS
 elif menu == "Financeiro":
-    st.header("💰 Performance Financeira")
+    st.title("💰 Gestão Financeira")
     st.dataframe(df_fin, use_container_width=True)
     
-    st.subheader("Evolução Mensal: Realizado vs Saving")
-    # Gráfico de Área para dar profundidade
-    fig_fin = px.area(df_fin, x="Mês", y=["Realizado", "Saving"], template="plotly_dark", 
-                      color_discrete_map={"Realizado": "#38bdf8", "Saving": "#10b981"},
-                      line_shape="spline")
-    st.plotly_chart(fig_fin, use_container_width=True)
+    st.subheader("Comparativo Mensal: Orçado vs Gasto")
+    fig_bar = px.bar(df_fin, x="Mês", y=["Previsto", "Realizado"], barmode="group", template="plotly_white", color_discrete_map={"Previsto": "#94a3b8", "Realizado": "#3b82f6"})
+    st.plotly_chart(fig_bar, use_container_width=True)
 
-# 3. ATIVOS: INVENTÁRIO (GRÁFICO DE BARRAS VERTICAIS)
+# 3. ATIVOS: GRÁFICO DE ÁREA
 elif menu == "Ativos":
-    st.header("📦 Gestão de Ativos")
+    st.title("📦 Inventário de Ativos")
     st.dataframe(df_ativos, use_container_width=True)
     
-    if not df_ativos.empty:
-        st.subheader("Contagem de Ativos por Tipo")
-        # Usamos barras verticais para diferenciar do financeiro
-        fig_at = px.bar(df_ativos, x=df_ativos.columns[0], template="plotly_dark", color_discrete_sequence=['#fbbf24'])
-        st.plotly_chart(fig_at, use_container_width=True)
+    st.subheader("Evolução de Ativos")
+    # Gráfico de área para ser diferente dos outros
+    fig_area = px.area(df_ativos, x=df_ativos.columns[0], y=df_ativos.columns[-1] if len(df_ativos.columns)>1 else None, template="plotly_white", color_discrete_sequence=['#8b5cf6'])
+    st.plotly_chart(fig_area, use_container_width=True)
 
-# 4. ESG: IMPACTO (GRÁFICO DE BARRAS HORIZONTAIS)
+# 4. ESG: BARRAS HORIZONTAIS
 elif menu == "ESG":
-    st.header("🌱 Sustentabilidade (ESG)")
+    st.title("🌱 Painel ESG")
     st.dataframe(df_esg, use_container_width=True)
     
-    if not df_esg.empty:
-        st.subheader("Iniciativas e Impacto")
-        # Barras horizontais para facilitar a leitura de nomes longos
-        fig_esg = px.bar(df_esg, x=df_esg.columns[-1], y=df_esg.columns[0], orientation='h', 
-                         template="plotly_dark", color_discrete_sequence=['#22c55e'])
-        st.plotly_chart(fig_esg, use_container_width=True)
+    st.subheader("Impacto das Iniciativas")
+    # Gráfico horizontal
+    fig_esg = px.bar(df_esg, x=df_esg.columns[-1], y=df_esg.columns[0], orientation='h', template="plotly_white", color_discrete_sequence=['#10b981'])
+    st.plotly_chart(fig_esg, use_container_width=True)
 
-# 5. SLAs: DISPONIBILIDADE (TABELA + MÉTRICAS)
+# 5. SLAs: GRÁFICO DE LINHAS COM MARCADORES
 elif menu == "SLAs":
-    st.header("⏱️ Níveis de Serviço (SLAs)")
+    st.title("⏱️ Monitoramento de SLAs")
     st.dataframe(df_slas, use_container_width=True)
     
-    if not df_slas.empty:
-        st.subheader("Status de Cumprimento")
-        # Gráfico de Funil ou Barras Coloridas por Status
-        fig_sla = px.bar(df_slas, x="Performance" if "Performance" in df_slas.columns else df_slas.columns[0], 
-                         y="Serviço" if "Serviço" in df_slas.columns else df_slas.columns[0],
-                         template="plotly_dark", color_discrete_sequence=['#ef4444'])
-        st.plotly_chart(fig_sla, use_container_width=True)
+    if "Performance" in df_slas.columns:
+        st.subheader("Performance por Serviço")
+        fig_line = px.line(df_slas, x="Mês" if "Mês" in df_slas.columns else df_slas.columns[0], y="Performance", markers=True, template="plotly_white", color_discrete_sequence=['#f43f5e'])
+        st.plotly_chart(fig_line, use_container_width=True)
