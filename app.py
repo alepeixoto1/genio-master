@@ -1,27 +1,46 @@
 import streamlit as st
 import pandas as pd
+import plotly.graph_objects as go
 import plotly.express as px
 
-# CONFIGURAÇÃO
+# CONFIG
 st.set_page_config(
     page_title="Gênio Master Pro",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# CSS
+# CSS PREMIUM
 st.markdown("""
 <style>
+
 .stApp {
-    background-color: #f4f6fb;
+    background: linear-gradient(180deg,#0f172a 0%,#020617 100%);
+}
+
+.block-container {
+    padding-top: 2rem;
 }
 
 .genio-card {
-    background: linear-gradient(135deg,#0f172a,#1e293b);
-    border-radius:12px;
-    padding:20px;
-    color:white;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 20px;
 }
+
+.card-title {
+    font-size: 13px;
+    color: #94a3b8;
+}
+
+.card-value {
+    font-size: 28px;
+    font-weight: bold;
+    color: white;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -35,15 +54,10 @@ CONFIG = {
     "Slas": {"gid": "2075740723", "icon": "⏱️"}
 }
 
-# MENU
-setor = st.sidebar.selectbox(
-    "Módulo",
-    list(CONFIG.keys())
-)
+setor = st.sidebar.selectbox("Módulo", CONFIG.keys())
 
 url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={CONFIG[setor]['gid']}"
 
-# TRY CORRETO
 try:
 
     df = pd.read_csv(url, skiprows=2)
@@ -51,78 +65,113 @@ try:
     df = df.dropna(how="all", axis=1)
     df = df.dropna(how="all", axis=0)
 
-    if df.empty:
+    st.markdown(f"# {CONFIG[setor]['icon']} Gênio Master • {setor}")
 
-        st.warning("Sem dados disponíveis")
+    cols_num = df.select_dtypes(include="number").columns
 
-    else:
+    # KPIs
+    c1,c2,c3,c4 = st.columns(4)
 
-        st.title(f"Gênio Master • {setor}")
+    with c1:
+        st.markdown(f"""
+        <div class="genio-card">
+        <div class="card-title">TOTAL REGISTROS</div>
+        <div class="card-value">{len(df)}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-        # COLUNAS NUMÉRICAS
-        cols_num = df.select_dtypes(include="number").columns
+    with c2:
+        total = int(df[cols_num[0]].sum()) if len(cols_num)>0 else 0
+        st.markdown(f"""
+        <div class="genio-card">
+        <div class="card-title">VOLUME</div>
+        <div class="card-value">{total}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-        # CARDS
-        c1, c2, c3, c4 = st.columns(4)
+    with c3:
+        st.markdown("""
+        <div class="genio-card">
+        <div class="card-title">STATUS</div>
+        <div class="card-value">Online</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-        with c1:
-            st.metric("Total", len(df))
+    with c4:
+        st.markdown("""
+        <div class="genio-card">
+        <div class="card-title">SYNC</div>
+        <div class="card-value">100%</div>
+        </div>
+        """, unsafe_allow_html=True)
 
-        with c2:
-            if len(cols_num) > 0:
-                st.metric("Volume", int(df[cols_num[0]].sum()))
+    st.markdown("## Analytics")
 
-        with c3:
-            st.metric("Status", "Online")
+    g1,g2 = st.columns(2)
 
-        with c4:
-            st.metric("Sistema", "Operacional")
+    # AREA CHART PREMIUM
+    with g1:
 
-        st.divider()
+        if len(cols_num)>0:
 
-        # GRÁFICOS
-        col1, col2 = st.columns(2)
+            fig = go.Figure()
 
-        with col1:
+            fig.add_trace(go.Scatter(
+                x=df.index,
+                y=df[cols_num[0]],
+                mode='lines',
+                line=dict(
+                    width=4,
+                    color='#3b82f6'
+                ),
+                fill='tozeroy',
+                fillcolor='rgba(59,130,246,0.2)'
+            ))
 
-            if len(cols_num) > 0:
+            fig.update_layout(
 
-                fig = px.area(
-                    df,
-                    x=df.index,
-                    y=cols_num[0],
-                    title="Tendência"
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+
+                font=dict(color="white"),
+
+                margin=dict(l=0,r=0,t=30,b=0),
+
+                xaxis=dict(showgrid=False),
+
+                yaxis=dict(
+                    gridcolor='rgba(255,255,255,0.05)'
                 )
+            )
 
-                fig.update_layout(
-                    paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
-                )
+            st.plotly_chart(fig, width="stretch")
 
-                st.plotly_chart(
-                    fig,
-                    width="stretch"
-                )
+    # DONUT PREMIUM
+    with g2:
 
-        with col2:
+        cols_txt = df.select_dtypes(include="object").columns
 
-            cols_txt = df.select_dtypes(include="object").columns
+        if len(cols_txt)>0:
 
-            if len(cols_txt) > 0:
+            fig2 = px.pie(
+                df,
+                names=cols_txt[0],
+                hole=0.8
+            )
 
-                fig2 = px.pie(
-                    df,
-                    names=cols_txt[0],
-                    hole=0.7,
-                    title="Distribuição"
-                )
+            fig2.update_layout(
 
-                st.plotly_chart(
-                    fig2,
-                    width="stretch"
-                )
+                paper_bgcolor='rgba(0,0,0,0)',
+                font=dict(color="white"),
 
-# EXCEPT OBRIGATÓRIO
+                showlegend=True,
+
+                margin=dict(l=0,r=0,t=30,b=0)
+            )
+
+            st.plotly_chart(fig2, width="stretch")
+
 except Exception as e:
 
-    st.error(f"Erro ao carregar dados: {e}")
+    st.error(e)
+
